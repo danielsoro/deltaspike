@@ -214,7 +214,7 @@ public class QuartzScheduler implements Scheduler<Job>
                 if (existingTriggers.size() > 1)
                 {
                     throw new IllegalStateException("multiple triggers found for " + jobKey + " ('" + jobDetail + "')" +
-                        ", but aren't supported by @" + Scheduled.class.getName() + "#overrideOnStartup");
+                            ", but aren't supported by @" + Scheduled.class.getName() + "#overrideOnStartup");
                 }
 
                 trigger = existingTriggers.iterator().next();
@@ -256,6 +256,19 @@ public class QuartzScheduler implements Scheduler<Job>
         try
         {
             this.scheduler.interrupt(createJobKey(jobClass));
+        }
+        catch (SchedulerException e)
+        {
+            throw ExceptionUtils.throwAsRuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean deleteJob(Class<? extends Job> jobClass)
+    {
+        try
+        {
+            return this.scheduler.deleteJob(createJobKey(jobClass));
         }
         catch (SchedulerException e)
         {
@@ -366,7 +379,7 @@ public class QuartzScheduler implements Scheduler<Job>
             try
             {
                 jobInstanceIsBean =
-                    Boolean.TRUE.equals(jobExecutionContext.getScheduler().getContext().get(jobClass.getName()));
+                        Boolean.TRUE.equals(jobExecutionContext.getScheduler().getContext().get(jobClass.getName()));
             }
             catch (SchedulerException e)
             {
@@ -437,10 +450,10 @@ public class QuartzScheduler implements Scheduler<Job>
     {
         if (schedulerClass.isAssignableFrom(this.scheduler.getClass()))
         {
-            return (S)this.scheduler;
+            return (S) this.scheduler;
         }
 
         throw new IllegalArgumentException(schedulerClass.getName() +
-            " isn't compatible with " + this.scheduler.getClass().getName());
+                " isn't compatible with " + this.scheduler.getClass().getName());
     }
 }
