@@ -28,6 +28,8 @@ import org.apache.deltaspike.data.test.domain.Simple;
 import org.apache.deltaspike.data.test.domain.Simple_;
 import org.apache.deltaspike.data.test.domain.SuperSimple_;
 
+import javax.persistence.criteria.CriteriaBuilder;
+
 @Repository
 @SuppressWarnings("unchecked")
 public abstract class SimpleCriteriaRepository extends AbstractEntityRepository<Simple, Long>
@@ -47,13 +49,13 @@ public abstract class SimpleCriteriaRepository extends AbstractEntityRepository<
     {
         return criteria()
                 .or(
-                    criteria()
-                        .eqIgnoreCase(Simple_.name, name)
-                        .notEqIgnoreCase(Simple_.name, nameLike),
-                    criteria()
-                        .likeIgnoreCase(Simple_.name, nameLike)
-                        .notLikeIgnoreCase(Simple_.name, name)
-                 )
+                        criteria()
+                                .eqIgnoreCase(Simple_.name, name)
+                                .notEqIgnoreCase(Simple_.name, nameLike),
+                        criteria()
+                                .likeIgnoreCase(Simple_.name, nameLike)
+                                .notLikeIgnoreCase(Simple_.name, name)
+                )
                 .getResultList();
     }
 
@@ -119,6 +121,16 @@ public abstract class SimpleCriteriaRepository extends AbstractEntityRepository<
                 .eq(Simple_.name, name)
                 .createQuery()
                 .getResultList();
+    }
+
+    public Object[] queryWithSelectAttributesAndTrim(String name)
+    {
+        return criteria()
+                .select(attribute(Simple_.name), trim(Simple_.name),
+                        trim(CriteriaBuilder.Trimspec.LEADING, Simple_.name))
+                .eq(Simple_.name, name)
+                .createQuery()
+                .getSingleResult();
     }
 
 }

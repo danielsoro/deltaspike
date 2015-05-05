@@ -22,6 +22,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.metamodel.SingularAttribute;
 
@@ -183,6 +184,26 @@ public interface CriteriaSupport<E>
      * @return          {@link QuerySelection} part of a {@link Criteria#select(Class, QuerySelection...)} call.
      */
     QuerySelection<E, String> substring(SingularAttribute<? super E, String> attribute, int from, int length);
+
+    /**
+     * Create a query selection for the
+     * {@link javax.persistence.criteria.CriteriaBuilder#trim(javax.persistence.criteria.Expression)}
+     * over a String attribute.
+     * @param attribute Attribute to apply trim.
+     * @return          {@link QuerySelection} part of a {@link Criteria#select(Class, QuerySelection...)} call.
+     */
+    QuerySelection<E, String> trim(SingularAttribute<? super E, String> attribute);
+
+    /**
+     * Create a query selection for the
+     * {@link javax.persistence.criteria.CriteriaBuilder#trim(javax.persistence.criteria.CriteriaBuilder.Trimspec,
+     * javax.persistence.criteria.Expression)}
+     * over a String attribute.
+     * @param trimspec Used to specify how strings are trimmed.
+     * @param attribute Attribute to apply trim.
+     * @return          {@link QuerySelection} part of a {@link Criteria#select(Class, QuerySelection...)} call.
+     */
+    QuerySelection<E, String> trim(CriteriaBuilder.Trimspec trimspec, SingularAttribute<? super E, String> attribute);
 
     /**
      * Create a query selection for the {@link javax.persistence.criteria.CriteriaBuilder#currentDate()}.
