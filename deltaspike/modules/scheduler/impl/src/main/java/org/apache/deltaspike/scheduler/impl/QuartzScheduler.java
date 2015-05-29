@@ -26,6 +26,7 @@ import org.apache.deltaspike.core.util.ExceptionUtils;
 import org.apache.deltaspike.core.util.PropertyFileUtils;
 import org.apache.deltaspike.core.util.ProxyUtils;
 import org.apache.deltaspike.core.util.metadata.AnnotationInstanceProvider;
+import org.apache.deltaspike.scheduler.api.DailyScheduled;
 import org.apache.deltaspike.scheduler.api.Scheduled;
 import org.apache.deltaspike.scheduler.spi.Scheduler;
 import org.quartz.CronScheduleBuilder;
@@ -168,12 +169,21 @@ public class QuartzScheduler implements Scheduler<Job>
     @Override
     public void registerNewJob(Class<? extends Job> jobClass)
     {
-        JobKey jobKey = createJobKey(jobClass);
+        if (jobClass.isAnnotationPresent(Scheduled.class))
+        {
+            registerNewJobScheduler(jobClass, createJobKey(jobClass), jobClass.getAnnotation(Scheduled.class));
+        }
+        else if (jobClass.isAnnotationPresent(DailyScheduled.class))
+        {
+            registerNewDailyScheduler(jobClass, createJobKey(jobClass), jobClass.getAnnotation(DailyScheduled.class));
+        }
 
+    }
+
+    private void registerNewJobScheduler(Class<? extends Job> jobClass, JobKey jobKey, Scheduled scheduled)
+    {
         try
         {
-            Scheduled scheduled = jobClass.getAnnotation(Scheduled.class);
-
             String description = scheduled.description();
 
             if ("".equals(scheduled.description()))
@@ -215,7 +225,7 @@ public class QuartzScheduler implements Scheduler<Job>
                 if (existingTriggers.size() > 1)
                 {
                     throw new IllegalStateException("multiple triggers found for " + jobKey + " ('" + jobDetail + "')" +
-                        ", but aren't supported by @" + Scheduled.class.getName() + "#overrideOnStartup");
+                            ", but aren't supported by @" + Scheduled.class.getName() + "#overrideOnStartup");
                 }
 
                 trigger = existingTriggers.iterator().next();
@@ -223,6 +233,79 @@ public class QuartzScheduler implements Scheduler<Job>
                 trigger = TriggerBuilder.newTrigger()
                         .withIdentity(trigger.getKey())
                         .withSchedule(CronScheduleBuilder.cronSchedule(scheduled.cronExpression()))
+                        .build();
+
+                this.scheduler.rescheduleJob(trigger.getKey(), trigger);
+            }
+            else
+            {
+                Logger.getLogger(QuartzScheduler.class.getName()).info(jobKey + " exists already and will be ignored.");
+            }
+        }
+        catch (SchedulerException e)
+        {
+            throw ExceptionUtils.throwAsRuntimeException(e);
+        }
+    }
+
+    private void registerNewDailyScheduler(Class<? extends Job> jobClass, JobKey jobKey,
+                                           DailyScheduled dailyScheduled)
+    {
+        try
+        {
+            String description = dailyScheduled.description();
+
+            if ("".equals(dailyScheduled.description()))
+            {
+                description = jobClass.getName();
+            }
+
+            JobDetail jobDetail = this.scheduler.getJobDetail(jobKey);
+            Trigger trigger;
+
+            if (jobDetail == null)
+            {
+                jobDetail = JobBuilder.newJob(jobClass)
+                        .withDescription(description)
+                        .withIdentity(jobKey)
+                        .build();
+
+
+                trigger = TriggerBuilder.newTrigger()
+                        .withSchedule(CronScheduleBuilder.
+                                dailyAtHourAndMinute(dailyScheduled.hour(), dailyScheduled.minute()))
+                        .build();
+
+                this.scheduler.scheduleJob(jobDetail, trigger);
+            }
+            else if (dailyScheduled.overrideOnStartup())
+            {
+                List<? extends Trigger> existingTriggers = this.scheduler.getTriggersOfJob(jobKey);
+
+                if (existingTriggers == null || existingTriggers.isEmpty())
+                {
+                    //TODO re-visit it
+                    trigger = TriggerBuilder.newTrigger()
+                            .withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(dailyScheduled.hour(), dailyScheduled
+                                    .minute()))
+                            .build();
+
+                    this.scheduler.scheduleJob(jobDetail, trigger);
+                    return;
+                }
+
+                if (existingTriggers.size() > 1)
+                {
+                    throw new IllegalStateException("multiple triggers found for " + jobKey + " ('" + jobDetail + "')" +
+                            ", but aren't supported by @" + DailyScheduled.class.getName() + "#overrideOnStartup");
+                }
+
+                trigger = existingTriggers.iterator().next();
+
+                trigger = TriggerBuilder.newTrigger()
+                        .withIdentity(trigger.getKey())
+                        .withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(dailyScheduled.hour(), dailyScheduled
+                                .minute()))
                         .build();
 
                 this.scheduler.rescheduleJob(trigger.getKey(), trigger);

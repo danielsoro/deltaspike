@@ -22,6 +22,7 @@ import org.apache.deltaspike.core.spi.activation.Deactivatable;
 import org.apache.deltaspike.core.util.ClassDeactivationUtils;
 import org.apache.deltaspike.core.util.ClassUtils;
 import org.apache.deltaspike.core.util.ServiceUtils;
+import org.apache.deltaspike.scheduler.api.DailyScheduled;
 import org.apache.deltaspike.scheduler.api.Scheduled;
 import org.apache.deltaspike.scheduler.spi.Scheduler;
 
@@ -48,6 +49,8 @@ public class SchedulerExtension implements Extension, Deactivatable
     private Boolean isActivated = true;
 
     private Set<Class> foundManagedJobClasses = new HashSet<Class>();
+
+    private Set<Class> foundDailyJobClasses = new HashSet<Class>();
 
     private Scheduler scheduler;
 
@@ -95,6 +98,14 @@ public class SchedulerExtension implements Extension, Deactivatable
         if (scheduled != null && scheduled.onStartup())
         {
             this.foundManagedJobClasses.add(beanClass);
+            return;
+        }
+
+        DailyScheduled dailyScheduled = pat.getAnnotatedType().getAnnotation(DailyScheduled.class);
+        if (dailyScheduled != null && dailyScheduled.onStartup())
+        {
+            this.foundDailyJobClasses.add(beanClass);
+            return;
         }
     }
 
@@ -121,6 +132,18 @@ public class SchedulerExtension implements Extension, Deactivatable
             {
                 afterBeanDiscovery.addDefinitionError(
                     new IllegalStateException("Multiple Job-Classes found with name " + jobClass.getSimpleName()));
+            }
+
+            foundJobNames.add(jobClass.getSimpleName());
+            this.scheduler.registerNewJob(jobClass);
+        }
+
+        for (Class jobClass : this.foundDailyJobClasses)
+        {
+            if (foundJobNames.contains(jobClass.getSimpleName()))
+            {
+                afterBeanDiscovery.addDefinitionError(
+                        new IllegalStateException("Multiple Job-Classes found with name " + jobClass.getSimpleName()));
             }
 
             foundJobNames.add(jobClass.getSimpleName());
