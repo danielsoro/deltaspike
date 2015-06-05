@@ -33,17 +33,17 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 public @interface DailyScheduled
 {
-    int hour();
+    int hour() default 00;
 
-    int minute();
+    int minute() default 00;
 
-    boolean overrideOnStartup() default false; //'true' triggers a re-schedule if the job exists already
+    boolean overrideOnStartup() default false;
 
     Class<? extends Annotation>[] startScopes() default { SessionScoped.class, RequestScoped.class };
 
-    Class group() default Scheduled.class; //type-safe group
+    Class group() default DailyScheduled.class;
 
     String description() default "";
 
-    boolean onStartup() default true; //use false to schedule it manually (after the bootstrapping-process)
+    boolean onStartup() default true;
 }

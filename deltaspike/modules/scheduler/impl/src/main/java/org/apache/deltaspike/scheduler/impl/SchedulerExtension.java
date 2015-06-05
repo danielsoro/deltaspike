@@ -33,7 +33,6 @@ import javax.enterprise.inject.spi.BeforeBeanDiscovery;
 import javax.enterprise.inject.spi.BeforeShutdown;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
-
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -94,6 +93,8 @@ public class SchedulerExtension implements Extension, Deactivatable
             return;
         }
 
+        validSchedule(pat);
+
         Scheduled scheduled = pat.getAnnotatedType().getAnnotation(Scheduled.class);
         if (scheduled != null && scheduled.onStartup())
         {
@@ -106,6 +107,27 @@ public class SchedulerExtension implements Extension, Deactivatable
         {
             this.foundDailyJobClasses.add(beanClass);
             return;
+        }
+    }
+
+    private <X> void validSchedule(ProcessAnnotatedType<X> pat)
+    {
+
+        int totalOfTheAnnotation = 0;
+
+        if (pat.getAnnotatedType().getAnnotation(Scheduled.class) != null)
+        {
+            totalOfTheAnnotation++;
+        }
+
+        if (pat.getAnnotatedType().getAnnotation(DailyScheduled.class) != null)
+        {
+            totalOfTheAnnotation++;
+        }
+
+        if (totalOfTheAnnotation > 1)
+        {
+            throw new RuntimeException("The schedule cannot be created with multiple schedule types");
         }
     }
 
@@ -131,7 +153,7 @@ public class SchedulerExtension implements Extension, Deactivatable
             if (foundJobNames.contains(jobClass.getSimpleName()))
             {
                 afterBeanDiscovery.addDefinitionError(
-                    new IllegalStateException("Multiple Job-Classes found with name " + jobClass.getSimpleName()));
+                        new IllegalStateException("Multiple Job-Classes found with name " + jobClass.getSimpleName()));
             }
 
             foundJobNames.add(jobClass.getSimpleName());
@@ -185,7 +207,8 @@ public class SchedulerExtension implements Extension, Deactivatable
         else if (this.foundManagedJobClasses.size() > 0)
         {
             LOG.warning(
-                this.foundManagedJobClasses.size() + " scheduling-jobs found, but there is no configured scheduler");
+                    this.foundManagedJobClasses
+                            .size() + " scheduling-jobs found, but there is no configured scheduler");
         }
     }
 
@@ -196,12 +219,13 @@ public class SchedulerExtension implements Extension, Deactivatable
             for (Type interfaceClass : scheduler.getClass().getGenericInterfaces())
             {
                 if (!(interfaceClass instanceof ParameterizedType) ||
-                        !Scheduler.class.isAssignableFrom((Class)((ParameterizedType)interfaceClass).getRawType()))
+                        !Scheduler.class.isAssignableFrom((Class) ((ParameterizedType) interfaceClass).getRawType()))
                 {
                     continue;
                 }
 
-                if (jobClass.isAssignableFrom(((Class)((ParameterizedType)interfaceClass).getActualTypeArguments()[0])))
+                if (jobClass
+                        .isAssignableFrom(((Class) ((ParameterizedType) interfaceClass).getActualTypeArguments()[0])))
                 {
                     return scheduler;
                 }
