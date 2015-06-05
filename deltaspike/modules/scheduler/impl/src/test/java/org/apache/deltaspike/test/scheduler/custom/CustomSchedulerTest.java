@@ -20,6 +20,7 @@ package org.apache.deltaspike.test.scheduler.custom;
 
 import junit.framework.Assert;
 import org.apache.deltaspike.scheduler.spi.Scheduler;
+import org.apache.deltaspike.test.scheduler.custom.autoregistered.AutoRegisteredJob;
 import org.junit.Test;
 
 import javax.inject.Inject;

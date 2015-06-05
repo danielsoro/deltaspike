@@ -20,6 +20,7 @@ package org.apache.deltaspike.test.scheduler.custom;
 
 import org.apache.deltaspike.core.spi.config.ConfigSource;
 import org.apache.deltaspike.scheduler.spi.Scheduler;
+import org.apache.deltaspike.test.scheduler.custom.autoregistered.AutoRegisteredJob;
 import org.apache.deltaspike.test.util.ArchiveUtils;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -43,6 +44,7 @@ public class CustomSchedulerWarFileTest extends CustomSchedulerTest
         JavaArchive testJar = ShrinkWrap.create(JavaArchive.class, "customSchedulerTest.jar")
                 .addPackage(CustomSchedulerWarFileTest.class.getPackage().getName())
                 .addPackage(Job.class.getPackage().getName())
+                .addClasses(AutoRegisteredJob.class)
                 .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml")
                 .addAsResource(new StringAsset(MockedScheduler.class.getName()),
                         "META-INF/services/" + Scheduler.class.getName())

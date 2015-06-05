@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.deltaspike.test.scheduler.custom;
+package org.apache.deltaspike.test.scheduler.custom.autoregistered;
 
 import org.apache.deltaspike.scheduler.api.Scheduled;
+import org.apache.deltaspike.test.scheduler.custom.CustomJob;
 
 @Scheduled(cronExpression = "*/1 * * * * ?")
 public class AutoRegisteredJob implements CustomJob
