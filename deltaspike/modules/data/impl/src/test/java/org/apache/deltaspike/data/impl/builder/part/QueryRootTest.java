@@ -199,6 +199,21 @@ public class QueryRootTest
         assertEquals(expected, result);
     }
 
+    @Test
+    public void should_create_count_by_name()
+    {
+        // given
+        final String name = "countByName";
+        final String expected =
+                "select count(e) from Simple e where e.name = ?1";
+
+        // when
+        String result = QueryRoot.create(name, repo, prefix(name)).getJpqlQuery().trim();
+
+        // then
+        assertEquals(expected, result);
+    }
+
     private MethodPrefix prefix(final String name)
     {
         return new MethodPrefix("", name);

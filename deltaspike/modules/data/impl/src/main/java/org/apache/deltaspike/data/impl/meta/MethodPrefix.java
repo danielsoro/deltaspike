@@ -27,6 +27,7 @@ public class MethodPrefix
     public static final String DEFAULT_ANY_PREFIX = "findAnyBy";
     public static final String DEFAULT_DELETE_PREFIX = "deleteBy";
     public static final String DEFAULT_REMOVE_PREFIX = "removeBy";
+    public static final String DEFAULT_COUNT_PREFIX = "countBy";
 
     private final String customPrefix;
     private final String methodName;
@@ -91,6 +92,11 @@ public class MethodPrefix
                 this.getPrefix().equalsIgnoreCase(DEFAULT_REMOVE_PREFIX);
     }
 
+    public boolean isCount()
+    {
+        return this.getPrefix().equalsIgnoreCase(DEFAULT_COUNT_PREFIX);
+    }
+
     private static enum KnownQueryPrefix
     {
         DEFAULT(DEFAULT_PREFIX)
@@ -126,6 +132,14 @@ public class MethodPrefix
             }
         },
         REMOVE_DEFAULT(DEFAULT_REMOVE_PREFIX)
+        {
+            @Override
+            public SingleResultType getStyle()
+            {
+                return SingleResultType.ANY;
+            }
+        },
+        COUNT_DEFAULT(DEFAULT_COUNT_PREFIX)
         {
             @Override
             public SingleResultType getStyle()
