@@ -214,6 +214,38 @@ public class QueryRootTest
         assertEquals(expected, result);
     }
 
+    @Test
+    public void should_create_query_with_group_by_only()
+    {
+        // given
+        final String name = "findByGroupByName";
+        final String expected =
+                "select e from Simple e " +
+                        "group by e.name";
+
+        // when
+        String result = QueryRoot.create(name, repo, prefix(name)).getJpqlQuery().trim();
+
+        // then
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void should_create_query_with_group_by_only_with_and()
+    {
+        // given
+        final String name = "findByGroupByNameAndEnabled";
+        final String expected =
+                "select e from Simple e " +
+                        "group by e.name, e.enabled";
+
+        // when
+        String result = QueryRoot.create(name, repo, prefix(name)).getJpqlQuery().trim();
+
+        // then
+        assertEquals(expected, result);
+    }
+
     private MethodPrefix prefix(final String name)
     {
         return new MethodPrefix("", name);

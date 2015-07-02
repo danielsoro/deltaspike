@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.deltaspike.core.util.StringUtils;
 import org.apache.deltaspike.data.impl.builder.MethodExpressionException;
 import org.apache.deltaspike.data.impl.builder.QueryBuilder;
 import org.apache.deltaspike.data.impl.builder.QueryBuilderContext;
@@ -76,13 +77,30 @@ public class QueryRoot extends QueryPart
     @Override
     protected QueryPart build(String queryPart, String method, RepositoryComponent repo)
     {
+
+
         String[] orderByParts = splitByKeyword(queryPart, "OrderBy");
         if (hasQueryConditions(orderByParts))
         {
+            String[] groupByParts = splitByKeyword(removePrefix(orderByParts[0]), "GroupBy");
+            if (groupByParts.length > 1)
+            {
+                GroupByQueryPart groupByQueryPart = new GroupByQueryPart();
+                children.add(groupByQueryPart.build(groupByParts[1], method, repo));
+            }
+
             String[] orParts = splitByKeyword(removePrefix(orderByParts[0]), "Or");
+            if (hasQueryConditions(groupByParts)) {
+                orParts = splitByKeyword(removePrefix(groupByParts[0]), "Or");
+            }
+
             boolean first = true;
             for (String or : orParts)
             {
+                if (StringUtils.isEmpty(or))
+                {
+                    continue;
+                }
                 OrQueryPart orPart = new OrQueryPart(first);
                 first = false;
                 children.add(orPart.build(or, method, repo));
@@ -93,6 +111,7 @@ public class QueryRoot extends QueryPart
             OrderByQueryPart orderByPart = new OrderByQueryPart();
             children.add(orderByPart.build(orderByParts[1], method, repo));
         }
+
         if (children.isEmpty())
         {
             throw new MethodExpressionException(repo.getRepositoryClass(), method);
@@ -137,6 +156,7 @@ public class QueryRoot extends QueryPart
     {
         Set<Class<? extends QueryPart>> excluded = new HashSet<Class<? extends QueryPart>>();
         excluded.add(OrderByQueryPart.class);
+        excluded.add(GroupByQueryPart.class);
         return excluded;
     }
 
