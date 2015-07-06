@@ -18,62 +18,41 @@
  */
 package org.apache.deltaspike.data.impl.builder.part;
 
-import org.apache.deltaspike.data.impl.builder.QueryBuilder;
 import org.apache.deltaspike.data.impl.builder.QueryBuilderContext;
 import org.apache.deltaspike.data.impl.meta.RepositoryComponent;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-
 import static org.apache.deltaspike.data.impl.util.QueryUtils.splitByKeyword;
-import static org.apache.deltaspike.data.impl.util.QueryUtils.uncapitalize;
 
 
-class GroupByQueryPart extends BasePropertyQueryPart
+class HavingQueryPart extends ConnectingQueryPart
 {
-    private List<String> attributes = new ArrayList<String>();
+    public HavingQueryPart(boolean first)
+    {
+        super(first);
+    }
 
     @Override
     protected QueryPart build(String queryPart, String method, RepositoryComponent repo)
     {
-        if (queryPart.contains("And"))
+        String[] andParts = splitByKeyword(queryPart, "And");
+        boolean first = true;
+        for (String and : andParts)
         {
-            String[] andParts = splitByKeyword(queryPart, "And");
-            for (String and : andParts)
-            {
-                split(and, "And", attributes);
-            }
-            return this;
+            AndQueryPart andPart = new AndQueryPart(first);
+            first = false;
+            children.add(andPart.build(and, method, repo));
         }
-        attributes.add(uncapitalize(queryPart));
         return this;
     }
 
     @Override
     protected QueryPart buildQuery(QueryBuilderContext ctx)
     {
-        ctx.append(" group by ");
-        for (Iterator<String> it = attributes.iterator(); it.hasNext(); )
+        if (first)
         {
-            String entityPrefix = QueryBuilder.ENTITY_NAME + ".";
-            ctx.append(entityPrefix).append(rewriteSeparator(it.next()));
-            if (it.hasNext())
-            {
-                ctx.append(", ");
-            }
+            ctx.append(" having ");
         }
         buildQueryForChildren(ctx);
         return this;
     }
-
-    private void split(String queryPart, String keyword, Collection<String> result)
-    {
-        for (String part : splitByKeyword(queryPart, keyword))
-        {
-            result.add(uncapitalize(part));
-        }
-    }
-
 }

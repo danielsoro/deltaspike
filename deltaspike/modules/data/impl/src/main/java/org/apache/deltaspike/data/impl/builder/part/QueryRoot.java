@@ -77,20 +77,48 @@ public class QueryRoot extends QueryPart
     @Override
     protected QueryPart build(String queryPart, String method, RepositoryComponent repo)
     {
-
-
         String[] orderByParts = splitByKeyword(queryPart, "OrderBy");
         if (hasQueryConditions(orderByParts))
         {
-            String[] groupByParts = splitByKeyword(removePrefix(orderByParts[0]), "GroupBy");
+            String[] havingParts = splitByKeyword(removePrefix(orderByParts[0]), "Having");
+            if (hasQueryConditions(orderByParts))
+            {
+                havingParts = splitByKeyword(removePrefix(orderByParts[0]), "Having");
+            }
+
+            String[] groupByParts = splitByKeyword(removePrefix(havingParts[0]), "GroupBy");
+            if (hasQueryConditions(havingParts))
+            {
+                groupByParts = splitByKeyword(removePrefix(havingParts[0]), "GroupBy");
+            }
+
             if (groupByParts.length > 1)
             {
                 GroupByQueryPart groupByQueryPart = new GroupByQueryPart();
                 children.add(groupByQueryPart.build(groupByParts[1], method, repo));
             }
 
+            if (havingParts.length > 1)
+            {
+                boolean first = true;
+                for (int i = 1; i < havingParts.length; i++)
+                {
+                    String having = havingParts[i];
+                    if (StringUtils.isEmpty(having))
+                    {
+                        continue;
+                    }
+                    HavingQueryPart havingQueryPart = new HavingQueryPart(first);
+                    first = false;
+                    children.add(havingQueryPart.build(having, method, repo));
+                }
+
+
+            }
+
             String[] orParts = splitByKeyword(removePrefix(orderByParts[0]), "Or");
-            if (hasQueryConditions(groupByParts)) {
+            if (hasQueryConditions(groupByParts))
+            {
                 orParts = splitByKeyword(removePrefix(groupByParts[0]), "Or");
             }
 
@@ -157,6 +185,7 @@ public class QueryRoot extends QueryPart
         Set<Class<? extends QueryPart>> excluded = new HashSet<Class<? extends QueryPart>>();
         excluded.add(OrderByQueryPart.class);
         excluded.add(GroupByQueryPart.class);
+        excluded.add(HavingQueryPart.class);
         return excluded;
     }
 

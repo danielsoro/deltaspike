@@ -215,6 +215,21 @@ public class QueryRootTest
     }
 
     @Test
+    public void should_create_count_by_name_and_enabled()
+    {
+        // given
+        final String name = "countByNameAndEnabled";
+        final String expected =
+                "select count(e) from Simple e where e.name = ?1 and e.enabled = ?2";
+
+        // when
+        String result = QueryRoot.create(name, repo, prefix(name)).getJpqlQuery().trim();
+
+        // then
+        assertEquals(expected, result);
+    }
+
+    @Test
     public void should_create_query_with_group_by_only()
     {
         // given
@@ -238,6 +253,40 @@ public class QueryRootTest
         final String expected =
                 "select e from Simple e " +
                         "group by e.name, e.enabled";
+
+        // when
+        String result = QueryRoot.create(name, repo, prefix(name)).getJpqlQuery().trim();
+
+        // then
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void should_create_query_with_group_by_and_having_name_like()
+    {
+        // given
+        final String name = "findByGroupByNameAndEnabledHavingNameLike";
+        final String expected =
+                "select e from Simple e " +
+                        "group by e.name, e.enabled " +
+                        "having e.name like ?1";
+
+        // when
+        String result = QueryRoot.create(name, repo, prefix(name)).getJpqlQuery().trim();
+
+        // then
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void should_create_query_with_group_by_and_having_name_like_and_enabled_is_null()
+    {
+        // given
+        final String name = "findByGroupByNameAndEnabledHavingNameLikeAndEnabledIsNull";
+        final String expected =
+                "select e from Simple e " +
+                        "group by e.name, e.enabled " +
+                        "having e.name like ?1 and e.enabled IS NULL";
 
         // when
         String result = QueryRoot.create(name, repo, prefix(name)).getJpqlQuery().trim();
