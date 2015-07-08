@@ -28,7 +28,7 @@ import javax.persistence.Entity;
 public class Parent extends NamedEntity
 {
 
-    @javax.persistence.OneToOne(cascade = CascadeType.ALL)
+    @javax.persistence.OneToOne(cascade = CascadeType.REFRESH)
     private OneToOne one;
 
     @javax.persistence.OneToMany(cascade = CascadeType.ALL, targetEntity = OneToMany.class)

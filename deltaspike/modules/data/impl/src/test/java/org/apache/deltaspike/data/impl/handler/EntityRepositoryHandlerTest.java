@@ -19,6 +19,8 @@
 package org.apache.deltaspike.data.impl.handler;
 
 import org.apache.deltaspike.data.test.TransactionalTestCase;
+import org.apache.deltaspike.data.test.domain.OneToOne;
+import org.apache.deltaspike.data.test.domain.Parent;
 import org.apache.deltaspike.data.test.domain.Simple;
 import org.apache.deltaspike.data.test.domain.Simple2;
 import org.apache.deltaspike.data.test.domain.Simple_;
@@ -26,6 +28,7 @@ import org.apache.deltaspike.data.test.service.ExtendedRepositoryAbstract;
 import org.apache.deltaspike.data.test.service.ExtendedRepositoryAbstract2;
 import org.apache.deltaspike.data.test.service.ExtendedRepositoryAbstract4;
 import org.apache.deltaspike.data.test.service.ExtendedRepositoryInterface;
+import org.apache.deltaspike.data.test.service.ParentRepository;
 import org.apache.deltaspike.test.category.WebProfileCategory;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.shrinkwrap.api.Archive;
@@ -57,6 +60,7 @@ public class EntityRepositoryHandlerTest extends TransactionalTestCase
                 .addClasses(ExtendedRepositoryAbstract.class)
                 .addClasses(ExtendedRepositoryAbstract2.class)
                 .addClasses(ExtendedRepositoryAbstract4.class)
+                .addClasses(ParentRepository.class)
                 .addPackage(Simple.class.getPackage());
     }
 
@@ -71,6 +75,9 @@ public class EntityRepositoryHandlerTest extends TransactionalTestCase
 
     @Inject
     private ExtendedRepositoryAbstract4 repoAbstract4;
+
+    @Inject
+    private ParentRepository parentRepository;
 
     @Produces
     @PersistenceContext
@@ -104,6 +111,18 @@ public class EntityRepositoryHandlerTest extends TransactionalTestCase
         // then
         assertEquals(id, simple.getId());
         assertEquals(newName, simple.getName());
+    }
+
+    @Test
+    public void should_save_with_cascade()
+    {
+        Parent parent = new Parent();
+        OneToOne oneToOne = new OneToOne();
+        parent.setOne(oneToOne);
+        parentRepository.save(parent);
+
+        assertNotNull(parent.getId());
+        assertNull(parent.getOne().getId());
     }
 
     @Test
