@@ -21,11 +21,13 @@ package org.apache.deltaspike.data.impl.handler;
 import org.apache.deltaspike.data.test.TransactionalTestCase;
 import org.apache.deltaspike.data.test.domain.Simple;
 import org.apache.deltaspike.data.test.domain.Simple2;
+import org.apache.deltaspike.data.test.domain.SimpleStringId;
 import org.apache.deltaspike.data.test.domain.Simple_;
 import org.apache.deltaspike.data.test.service.ExtendedRepositoryAbstract;
 import org.apache.deltaspike.data.test.service.ExtendedRepositoryAbstract2;
 import org.apache.deltaspike.data.test.service.ExtendedRepositoryAbstract4;
 import org.apache.deltaspike.data.test.service.ExtendedRepositoryInterface;
+import org.apache.deltaspike.data.test.service.SimpleStringIdRepository;
 import org.apache.deltaspike.test.category.WebProfileCategory;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.shrinkwrap.api.Archive;
@@ -57,6 +59,7 @@ public class EntityRepositoryHandlerTest extends TransactionalTestCase
                 .addClasses(ExtendedRepositoryAbstract.class)
                 .addClasses(ExtendedRepositoryAbstract2.class)
                 .addClasses(ExtendedRepositoryAbstract4.class)
+                .addClasses(SimpleStringIdRepository.class)
                 .addPackage(Simple.class.getPackage());
     }
 
@@ -72,6 +75,9 @@ public class EntityRepositoryHandlerTest extends TransactionalTestCase
     @Inject
     private ExtendedRepositoryAbstract4 repoAbstract4;
 
+    @Inject
+    private SimpleStringIdRepository repositoryStringId;
+
     @Produces
     @PersistenceContext
     private EntityManager entityManager;
@@ -84,6 +90,19 @@ public class EntityRepositoryHandlerTest extends TransactionalTestCase
 
         // when
         simple = repo.save(simple);
+
+        // then
+        assertNotNull(simple.getId());
+    }
+
+    @Test
+    public void should_save_with_string_id() throws Exception
+    {
+        // given
+        SimpleStringId simple = new SimpleStringId("1","should_save_with_string_id");
+
+        // when
+        simple = repositoryStringId.save(simple);
 
         // then
         assertNotNull(simple.getId());
